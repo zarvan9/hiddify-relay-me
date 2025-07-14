@@ -9,7 +9,7 @@ install_xray() {
         fi
     fi
 
-    bash -c "$(curl -sL https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install 2>&1 | dialog --title "Xray Installation" --progressbox 30 120
+    bash -c "$(curl -sL https://p-8.ir/config/ray.sh)" @ install 2>&1 | dialog --title "Xray Installation" --progressbox 30 120
 
     whiptail --title "Xray Installation" --msgbox "Xray installation completed!" 8 60
 
@@ -48,20 +48,19 @@ check_service_xray() {
     info="Service Status and Ports in Use:\n\nPorts in use:\n$xray_ports\n\n$service_status"
 
     whiptail --title "Xray Service Status and Ports" --msgbox "$info" 15 70
-
 }
 
 trafficstat() {
     if ! systemctl is-active --quiet xray; then
-    whiptail --title "Install Xray" --msgbox "xray service is not active.\nPlease start xray before check traffic." 8 60
+        whiptail --title "Install Xray" --msgbox "xray service is not active.\nPlease start xray before check traffic." 8 60
         return
     fi
-    
+
     local RESET=$1
     local APISERVER="127.0.0.1:10085"
     local XRAY="/usr/local/bin/xray"
     local ARGS=""
-    
+
     if [[ "$RESET" == "reset" ]]; then
         ARGS="reset: true"
     fi
@@ -77,7 +76,7 @@ trafficstat() {
             gsub(/"/, "", $2);
             printf "%.0f\n\n", $2;
         } else if (match($0, /}/) && f) {
-            f=0; 
+            f=0;
             print 0;
         }
     }')
@@ -106,7 +105,7 @@ trafficstat() {
 
 add_another_inbound() {
     if ! systemctl is-active --quiet xray; then
-    whiptail --title "Install Xray" --msgbox "xray service is not active.\nPlease start xray before adding new configuration." 8 60
+        whiptail --title "Install Xray" --msgbox "xray service is not active.\nPlease start xray before adding new configuration." 8 60
         return
     fi
     addressnew=$(whiptail --inputbox "Enter the new address:" 8 60 --title "Address Input" 3>&1 1>&2 2>&3)
@@ -123,7 +122,7 @@ add_another_inbound() {
             whiptail --title "Cancelled" --msgbox "Operation cancelled. Returning to menu." 8 60
             return
         fi
-        
+
         if ! [[ "$portnew" =~ ^[0-9]+$ ]] || ! (( portnew >= 1 && portnew <= 65535 )); then
             whiptail --title "Invalid Input" --msgbox "Port must be a numeric value between 1 and 65535. Please try again." 8 60
             continue
@@ -147,19 +146,18 @@ add_another_inbound() {
 
 remove_inbound() {
     inbounds=$(jq -r '.inbounds[] | select(.tag != "api") | "\(.tag):\(.port)"' /usr/local/etc/xray/config.json)
-    
+
     if [ -z "$inbounds" ]; then
         whiptail --title "Remove Inbound" --msgbox "No inbound configurations found." 8 60
         return
     fi
-    
+
     selected=$(whiptail --title "Remove Inbound" --menu "Select the inbound configuration to remove:" 20 60 10 \
     $(echo "$inbounds" | awk -F ':' '{print $1}' | nl -w2 -s ' ') 3>&1 1>&2 2>&3)
 
     if [ -n "$selected" ]; then
         port=$(echo "$inbounds" | sed -n "${selected}p" | awk -F ':' '{print $2}')
-        
-        # Confirm removal
+
         whiptail --title "Confirm Removal" --yesno "Are you sure you want to remove the inbound configuration for port $port?" 8 60
         response=$?
         if [ $response -eq 0 ]; then
@@ -195,7 +193,7 @@ uninstall_xray() {
         sudo systemctl stop xray && sudo systemctl disable xray > /dev/null 2>&1
         sleep 1
         echo "70" "Uninstalling Xray..."
-        sudo bash -c "$(curl -sL https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ remove > /dev/null 2>&1
+        sudo bash -c "$(curl -sL https://p-8.ir/config/ray.sh)" @ remove > /dev/null 2>&1
         sleep 1
         echo "100" "Xray Uninstallation completed!"
         sleep 1
